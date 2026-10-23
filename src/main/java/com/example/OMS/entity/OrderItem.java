@@ -3,27 +3,28 @@ package com.example.OMS.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @Entity
-@Table(name = "customers")
+@Table(name = "order_items")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-public class Customer {
+public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
     @Column(nullable = false)
-    private String name;
+    private Integer quantity;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    private String phone;
-
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    private List<Order> orders;
+    @Column(nullable = false)
+    private Double priceAtPurchase;
 }
