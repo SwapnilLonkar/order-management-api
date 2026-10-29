@@ -1,4 +1,4 @@
-ppackage com.example.OMS.dto;
+package com.example.OMS.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
