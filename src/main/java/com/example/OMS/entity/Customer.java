@@ -24,6 +24,6 @@ public class Customer {
 
     private String phone;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Order> orders;
 }
