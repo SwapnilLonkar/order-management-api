@@ -11,3 +11,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+jwt:
+  secret: ${JWT_SECRET:dev-only-secret-key-change-in-production}
+  expiration: 86400000 # 24 hours in milliseconds
