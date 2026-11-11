@@ -32,11 +32,24 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
     private final CurrentUserService currentUserService;
+    private final CustomerService customerService;
 
     @Transactional
     public OrderDto create(OrderDto dto) {
-        Customer customer = customerRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new CustomerNotFoundException(dto.getCustomerId()));
+        User currentUser = currentUserService.requireCurrentUser();
+        Customer customer;
+        if (currentUser.getRole() == Role.CUSTOMER) {
+            // Customers order for themselves only — any customerId in the
+            // request is ignored.
+            customer = customerService.getOrCreateSelfCustomer(currentUser);
+        } else {
+            if (dto.getCustomerId() == null) {
+                throw new IllegalStateException(
+                        "customerId is required when an admin places an order");
+            }
+            customer = customerRepository.findById(dto.getCustomerId())
+                    .orElseThrow(() -> new CustomerNotFoundException(dto.getCustomerId()));
+        }
 
         List<OrderItem> orderItems = new ArrayList<>();
 
@@ -62,7 +75,7 @@ public class OrderService {
 
         Order order = Order.builder()
                 .customer(customer)
-                .placedBy(currentUserService.requireCurrentUser())
+                .placedBy(currentUser)
                 .status(OrderStatus.PENDING)
                 .orderDate(LocalDateTime.now())
                 .items(orderItems)

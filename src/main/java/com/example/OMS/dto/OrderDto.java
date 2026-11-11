@@ -3,7 +3,6 @@ package com.example.OMS.dto;
 import com.example.OMS.entity.OrderStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,7 +15,8 @@ public class OrderDto {
 
     private Long id;
 
-    @NotNull(message = "Customer id is required")
+    // Required when an ADMIN places an order on someone's behalf. Ignored for
+    // CUSTOMER accounts: they always order for their own linked record.
     private Long customerId;
 
     // Read-only in responses: the account that placed the order.

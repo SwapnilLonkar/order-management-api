@@ -21,6 +21,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final CustomerService customerService;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -36,6 +37,10 @@ public class AuthService {
                 .role(role)
                 .build();
         userRepository.save(user);
+        if (role == Role.CUSTOMER) {
+            // A customer account gets its own customer record to order for.
+            customerService.getOrCreateSelfCustomer(user);
+        }
         return new AuthResponse(jwtService.generateToken(user.getUsername(), user.getRole()));
     }
 

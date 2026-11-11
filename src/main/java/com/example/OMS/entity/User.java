@@ -23,4 +23,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    // The customer record this account orders for (CUSTOMER accounts only);
+    // created automatically and linked on first use.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 }

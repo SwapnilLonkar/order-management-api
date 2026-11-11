@@ -54,6 +54,9 @@ class OrderServiceTest {
     @Mock
     private CurrentUserService currentUserService;
 
+    @Mock
+    private CustomerService customerService;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -98,6 +101,34 @@ class OrderServiceTest {
         assertEquals(2, toSave.getItems().get(0).getQuantity());
         assertEquals(19.99, toSave.getItems().get(0).getPriceAtPurchase());
         assertEquals(toSave, toSave.getItems().get(0).getOrder());
+    }
+
+    @Test
+    void createForCustomerAccountUsesSelfCustomerAndIgnoresRequestedCustomerId() {
+        User customerUser = User.builder().id(7L).username("priya").role(Role.CUSTOMER).build();
+        Customer self = Customer.builder().id(5L).name("priya").email("priya@oms.local").build();
+        Product product = Product.builder().id(2L).name("Widget").price(19.99).stockQuantity(10).build();
+        // The request names someone else's customer record (id 1) — a
+        // CUSTOMER account must still order for its own record only.
+        OrderDto input = OrderDto.builder()
+                .customerId(1L)
+                .items(List.of(OrderItemDto.builder().productId(2L).quantity(1).build()))
+                .build();
+
+        when(currentUserService.requireCurrentUser()).thenReturn(customerUser);
+        when(customerService.getOrCreateSelfCustomer(customerUser)).thenReturn(self);
+        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orderMapper.toDto(any(Order.class))).thenReturn(
+                OrderDto.builder().id(9L).customerId(5L).status(OrderStatus.PENDING).build());
+
+        orderService.create(input);
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        assertEquals(self, orderCaptor.getValue().getCustomer());
+        assertEquals(customerUser, orderCaptor.getValue().getPlacedBy());
+        verify(customerRepository, never()).findById(1L);
     }
 
     @Test
