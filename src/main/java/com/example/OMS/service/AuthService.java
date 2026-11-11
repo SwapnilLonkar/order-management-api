@@ -26,10 +26,14 @@ public class AuthService {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new IllegalStateException("Username already taken: " + request.getUsername());
         }
+        Role role = request.getRole() == null ? Role.CUSTOMER : request.getRole();
+        if (role == Role.ADMIN) {
+            throw new IllegalStateException("Cannot self-register as ADMIN");
+        }
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
+                .role(role)
                 .build();
         userRepository.save(user);
         return new AuthResponse(jwtService.generateToken(user.getUsername(), user.getRole()));

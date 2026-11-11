@@ -1,6 +1,7 @@
 package com.example.OMS.entity;
 
 public enum Role {
-    USER,
+    CUSTOMER,
+    SELLER,
     ADMIN
 }
