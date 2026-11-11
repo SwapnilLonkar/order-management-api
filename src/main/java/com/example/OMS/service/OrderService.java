@@ -138,13 +138,27 @@ public class OrderService {
         }
 
         User currentUser = currentUserService.requireCurrentUser();
-        if (!canView(order, currentUser)) {
+        if (!canUpdateStatus(order, currentUser)) {
             throw new IllegalStateException(
-                    "You can only update the status of orders that involve you");
+                    "Only the seller fulfilling the order (or an admin) can change its status");
         }
 
         order.setStatus(newStatus);
         return toVisibleDto(orderRepository.save(order), currentUser);
+    }
+
+    /** Who may change an order's status: the SELLER fulfills it, so a seller
+     *  involved in the order (or any ADMIN) may update it. Customers never
+     *  can — they only track the status. */
+    private boolean canUpdateStatus(Order order, User currentUser) {
+        if (currentUser.getRole() == Role.ADMIN) {
+            return true;
+        }
+        if (currentUser.getRole() != Role.SELLER) {
+            return false;
+        }
+        return order.getItems() != null && order.getItems().stream()
+                .anyMatch(item -> isSellerItem(item, currentUser));
     }
 
     /** ADMIN sees every order; a CUSTOMER sees orders they placed; a SELLER sees

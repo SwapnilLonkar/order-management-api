@@ -231,6 +231,20 @@ class OrderServiceTest {
     }
 
     @Test
+    void updateStatusThrowsWhenCustomerTriesToChangeOwnOrder() {
+        User customerUser = User.builder().id(7L).username("priya").role(Role.CUSTOMER).build();
+        // Even the customer who placed the order cannot change its status —
+        // fulfillment status belongs to the seller.
+        Order order = Order.builder().id(1L).status(OrderStatus.PENDING).placedBy(customerUser).build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(currentUserService.requireCurrentUser()).thenReturn(customerUser);
+
+        assertThrows(IllegalStateException.class, () -> orderService.updateStatus(1L, OrderStatus.CANCELLED));
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
     void updateStatusThrowsWhenNotFound() {
         when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
