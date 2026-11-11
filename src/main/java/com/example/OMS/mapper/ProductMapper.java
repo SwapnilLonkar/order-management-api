@@ -14,6 +14,8 @@ public class ProductMapper {
                 .description(product.getDescription())
                 .price(product.getPrice())
                 .stockQuantity(product.getStockQuantity())
+                .sellerId(product.getSeller() == null ? null : product.getSeller().getId())
+                .sellerUsername(product.getSeller() == null ? null : product.getSeller().getUsername())
                 .build();
     }
 

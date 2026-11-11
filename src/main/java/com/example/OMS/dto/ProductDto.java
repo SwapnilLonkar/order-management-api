@@ -22,4 +22,9 @@ public class ProductDto {
     @NotNull(message = "Stock quantity is required")
     @Min(value = 0, message = "Stock cannot be negative")
     private Integer stockQuantity;
+
+    // Read-only in responses: the seller account that owns the product.
+    private Long sellerId;
+
+    private String sellerUsername;
 }

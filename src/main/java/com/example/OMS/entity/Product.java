@@ -24,4 +24,9 @@ public class Product {
 
     @Column(nullable = false)
     private Integer stockQuantity;
+
+    // The seller account that owns this product; null for products created before ownership existed.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id")
+    private User seller;
 }
