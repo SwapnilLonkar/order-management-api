@@ -19,6 +19,11 @@ public class OrderDto {
     @NotNull(message = "Customer id is required")
     private Long customerId;
 
+    // Read-only in responses: the account that placed the order.
+    private Long placedById;
+
+    private String placedByUsername;
+
     private OrderStatus status;
 
     private LocalDateTime orderDate;

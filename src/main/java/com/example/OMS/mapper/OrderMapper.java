@@ -24,6 +24,8 @@ public class OrderMapper {
         return OrderDto.builder()
                 .id(order.getId())
                 .customerId(order.getCustomer().getId())
+                .placedById(order.getPlacedBy() == null ? null : order.getPlacedBy().getId())
+                .placedByUsername(order.getPlacedBy() == null ? null : order.getPlacedBy().getUsername())
                 .status(order.getStatus())
                 .orderDate(order.getOrderDate())
                 .items(itemDtos)

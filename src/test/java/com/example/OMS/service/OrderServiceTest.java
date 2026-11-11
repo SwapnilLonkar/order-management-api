@@ -6,6 +6,8 @@ import com.example.OMS.entity.Customer;
 import com.example.OMS.entity.Order;
 import com.example.OMS.entity.OrderStatus;
 import com.example.OMS.entity.Product;
+import com.example.OMS.entity.Role;
+import com.example.OMS.entity.User;
 import com.example.OMS.exception.CustomerNotFoundException;
 import com.example.OMS.exception.InsufficientStockException;
 import com.example.OMS.exception.OrderNotFoundException;
@@ -14,6 +16,8 @@ import com.example.OMS.mapper.OrderMapper;
 import com.example.OMS.repository.CustomerRepository;
 import com.example.OMS.repository.OrderRepository;
 import com.example.OMS.repository.ProductRepository;
+import com.example.OMS.security.CurrentUserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,6 +31,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,8 +51,22 @@ class OrderServiceTest {
     @Mock
     private OrderMapper orderMapper;
 
+    @Mock
+    private CurrentUserService currentUserService;
+
     @InjectMocks
     private OrderService orderService;
+
+    private User adminUser;
+
+    @BeforeEach
+    void setUp() {
+        // Order visibility is role-scoped; an ADMIN current user can see and
+        // change every order, which keeps these tests focused on the original
+        // create/status rules. Lenient: some paths throw before the user is read.
+        adminUser = User.builder().id(99L).username("admin").role(Role.ADMIN).build();
+        lenient().when(currentUserService.requireCurrentUser()).thenReturn(adminUser);
+    }
 
     @Test
     void createDeductsStockAndReturnsSavedOrder() {
@@ -74,6 +93,7 @@ class OrderServiceTest {
         Order toSave = orderCaptor.getValue();
         assertEquals(OrderStatus.PENDING, toSave.getStatus());
         assertEquals(customer, toSave.getCustomer());
+        assertEquals(adminUser, toSave.getPlacedBy());
         assertEquals(1, toSave.getItems().size());
         assertEquals(2, toSave.getItems().get(0).getQuantity());
         assertEquals(19.99, toSave.getItems().get(0).getPriceAtPurchase());

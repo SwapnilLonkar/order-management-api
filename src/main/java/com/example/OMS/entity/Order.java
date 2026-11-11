@@ -21,6 +21,11 @@ public class Order {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
+    // The account that placed the order; null for orders created before accounts were tracked.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "placed_by_id")
+    private User placedBy;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
