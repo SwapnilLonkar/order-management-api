@@ -19,6 +19,9 @@ public class Product {
 
     private String description;
 
+    // Optional storefront image, shown on the product card.
+    private String imageUrl;
+
     @Column(nullable = false)
     private Double price;
 

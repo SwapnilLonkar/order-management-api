@@ -12,6 +12,7 @@ public class ProductMapper {
                 .id(product.getId())
                 .name(product.getName())
                 .description(product.getDescription())
+                .imageUrl(product.getImageUrl())
                 .price(product.getPrice())
                 .stockQuantity(product.getStockQuantity())
                 .sellerId(product.getSeller() == null ? null : product.getSeller().getId())
@@ -24,6 +25,7 @@ public class ProductMapper {
                 .id(dto.getId())
                 .name(dto.getName())
                 .description(dto.getDescription())
+                .imageUrl(dto.getImageUrl())
                 .price(dto.getPrice())
                 .stockQuantity(dto.getStockQuantity())
                 .build();
