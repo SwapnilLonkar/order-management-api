@@ -19,7 +19,9 @@ public class Product {
 
     private String description;
 
-    // Optional storefront image, shown on the product card.
+    // Optional storefront image, shown on the product card. TEXT (not the
+    // default varchar) so a seller-uploaded image stored as a data URL fits.
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(nullable = false)
