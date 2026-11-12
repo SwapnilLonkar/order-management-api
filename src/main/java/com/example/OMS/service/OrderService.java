@@ -138,21 +138,45 @@ public class OrderService {
         }
 
         User currentUser = currentUserService.requireCurrentUser();
-        if (!canUpdateStatus(order, currentUser)) {
+        if (!canUpdateStatus(order, currentUser, newStatus)) {
             throw new IllegalStateException(
-                    "Only the seller fulfilling the order (or an admin) can change its status");
+                    "You are not allowed to change the status of this order");
+        }
+
+        if (newStatus == OrderStatus.CANCELLED) {
+            restoreStock(order);
         }
 
         order.setStatus(newStatus);
         return toVisibleDto(orderRepository.save(order), currentUser);
     }
 
-    /** Who may change an order's status: the SELLER fulfills it, so a seller
-     *  involved in the order (or any ADMIN) may update it. Customers never
-     *  can — they only track the status. */
-    private boolean canUpdateStatus(Order order, User currentUser) {
+    /** Cancelling an order returns its reserved quantities to stock. */
+    private void restoreStock(Order order) {
+        if (order.getItems() == null) {
+            return;
+        }
+        for (OrderItem item : order.getItems()) {
+            Product product = item.getProduct();
+            if (product != null) {
+                product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
+            }
+        }
+    }
+
+    /** Who may change an order's status: an ADMIN any order; a SELLER an order
+     *  containing their products (they fulfill it); a CUSTOMER may only cancel
+     *  their own order while it is PENDING or CONFIRMED — before it ships. */
+    private boolean canUpdateStatus(Order order, User currentUser, OrderStatus newStatus) {
         if (currentUser.getRole() == Role.ADMIN) {
             return true;
+        }
+        if (currentUser.getRole() == Role.CUSTOMER) {
+            return newStatus == OrderStatus.CANCELLED
+                    && (order.getStatus() == OrderStatus.PENDING
+                        || order.getStatus() == OrderStatus.CONFIRMED)
+                    && order.getPlacedBy() != null
+                    && order.getPlacedBy().getId().equals(currentUser.getId());
         }
         if (currentUser.getRole() != Role.SELLER) {
             return false;

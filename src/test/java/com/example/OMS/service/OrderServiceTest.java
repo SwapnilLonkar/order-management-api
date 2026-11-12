@@ -4,6 +4,7 @@ import com.example.OMS.dto.OrderDto;
 import com.example.OMS.dto.OrderItemDto;
 import com.example.OMS.entity.Customer;
 import com.example.OMS.entity.Order;
+import com.example.OMS.entity.OrderItem;
 import com.example.OMS.entity.OrderStatus;
 import com.example.OMS.entity.Product;
 import com.example.OMS.entity.Role;
@@ -231,11 +232,42 @@ class OrderServiceTest {
     }
 
     @Test
-    void updateStatusThrowsWhenCustomerTriesToChangeOwnOrder() {
+    void updateStatusLetsCustomerCancelOwnOrderBeforeItShips() {
         User customerUser = User.builder().id(7L).username("priya").role(Role.CUSTOMER).build();
-        // Even the customer who placed the order cannot change its status —
-        // fulfillment status belongs to the seller.
+        Product product = Product.builder().id(2L).name("Widget").price(19.99).stockQuantity(10).build();
+        OrderItem item = OrderItem.builder().product(product).quantity(2).priceAtPurchase(19.99).build();
+        Order order = Order.builder().id(1L).status(OrderStatus.PENDING)
+                .placedBy(customerUser).items(new java.util.ArrayList<>(List.of(item))).build();
+        OrderDto expected = OrderDto.builder().id(1L).status(OrderStatus.CANCELLED).build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(currentUserService.requireCurrentUser()).thenReturn(customerUser);
+        when(orderRepository.save(order)).thenReturn(order);
+        when(orderMapper.toDto(order)).thenReturn(expected);
+
+        assertEquals(expected, orderService.updateStatus(1L, OrderStatus.CANCELLED));
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        // Cancelling returns the reserved quantity to stock.
+        assertEquals(12, product.getStockQuantity());
+    }
+
+    @Test
+    void updateStatusThrowsWhenCustomerTriesToChangeStatusOtherThanCancel() {
+        User customerUser = User.builder().id(7L).username("priya").role(Role.CUSTOMER).build();
+        // A customer may cancel, but never move fulfillment forward.
         Order order = Order.builder().id(1L).status(OrderStatus.PENDING).placedBy(customerUser).build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(currentUserService.requireCurrentUser()).thenReturn(customerUser);
+
+        assertThrows(IllegalStateException.class, () -> orderService.updateStatus(1L, OrderStatus.SHIPPED));
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void updateStatusThrowsWhenCustomerCancelsAfterItShips() {
+        User customerUser = User.builder().id(7L).username("priya").role(Role.CUSTOMER).build();
+        Order order = Order.builder().id(1L).status(OrderStatus.SHIPPED).placedBy(customerUser).build();
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(currentUserService.requireCurrentUser()).thenReturn(customerUser);
