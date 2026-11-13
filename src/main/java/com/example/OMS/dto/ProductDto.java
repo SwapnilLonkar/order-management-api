@@ -3,6 +3,8 @@ package com.example.OMS.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.util.List;
+
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
@@ -16,6 +18,11 @@ public class ProductDto {
     private String description;
 
     private String imageUrl;
+
+    // The full ordered gallery, cover first. On write, the first entry
+    // becomes imageUrl (the cover) and the rest are stored as gallery photos;
+    // when omitted, imageUrl alone is used (single-photo products).
+    private List<String> imageUrls;
 
     @NotNull(message = "Price is required")
     @Positive(message = "Price must be positive")

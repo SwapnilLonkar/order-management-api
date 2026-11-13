@@ -54,7 +54,9 @@ public class ProductService {
         }
         existing.setName(dto.getName());
         existing.setDescription(dto.getDescription());
-        existing.setImageUrl(dto.getImageUrl());
+        Product mappedImages = productMapper.toEntity(dto);
+        existing.setImageUrl(mappedImages.getImageUrl());
+        existing.setImages(mappedImages.getImages());
         existing.setPrice(dto.getPrice());
         existing.setStockQuantity(dto.getStockQuantity());
         return productMapper.toDto(productRepository.save(existing));

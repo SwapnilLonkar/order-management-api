@@ -3,6 +3,9 @@ package com.example.OMS.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "products")
 @Getter @Setter
@@ -21,8 +24,17 @@ public class Product {
 
     // Optional storefront image, shown on the product card. TEXT (not the
     // default varchar) so a seller-uploaded image stored as a data URL fits.
+    // This is the gallery's cover image (the first photo).
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
+
+    // Additional gallery photos, in display order, shown after the cover.
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    @OrderColumn(name = "position")
+    @Builder.Default
+    private List<String> images = new ArrayList<>();
 
     @Column(nullable = false)
     private Double price;
