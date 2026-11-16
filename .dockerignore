@@ -1,0 +1,8 @@
+target/
+.git
+.gitignore
+.env
+.env.example
+scripts/
+README.md
+HELP.md
